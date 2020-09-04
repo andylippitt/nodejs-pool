@@ -1,2 +1,2 @@
-FROM andylippitt/pool_controller:0.20-arm
-COPY --from=andylippitt/pool_web:0.20-arm /app/dist/web/ /app/dist/static/
+FROM andylippitt/pool_controller:0.21
+COPY --from=andylippitt/pool_web:0.21 /app/dist/web/ /app/dist/static/
