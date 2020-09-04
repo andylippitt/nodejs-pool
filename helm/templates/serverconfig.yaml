@@ -11,7 +11,7 @@ data:
           "rs485Port": "/dev/ttyUSB0",
           "mockPort": false,
           "netConnect": true,
-          "netHost": "pool-proxy",
+          "netHost": "{{ .Release.Name }}-pool-proxy",
           "netPort": 30485,
           "inactivityRetry": 10,
           "portSettings": {
