@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pool-controller-webclient-config
+data:
+  discover: |
+    {
+      "override": {
+        "protocol": "http",
+        "host": "{{ .Values.controller.publicHostname }}",
+        "port": {{ .Values.controller.service.nodePort }}
+      },
+      "useSSDP": false,
+      "poolURL": "http://{{ .Values.controller.publicHostname }}:{{ .Values.controller.service.nodePort }}"
+    }
+---

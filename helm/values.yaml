@@ -1,0 +1,27 @@
+controller:
+  image:
+    repository: andylippitt/pool_controller_unified
+    tag: 0.20-arm
+
+  nodeSelector: {}
+  imagePullSecrets: {}
+  pullPolicy: IfNotPresent
+
+  publicHostname: override.controller.publicHostname
+
+  service:
+    type: NodePort
+    nodePort: 31080
+
+proxy:
+  image:
+    repository: andylippitt/pool_proxy
+    tag: 0.20-arm
+  
+  config:
+    ssh: pi@raspberry
+    device: "FILE:/dev/ttyS0,b9600,raw"
+
+  nodeSelector: {}
+  imagePullSecrets: {}
+  pullPolicy: IfNotPresent

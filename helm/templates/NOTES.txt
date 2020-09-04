@@ -1,0 +1,4 @@
+Don't forget to create the secret for the creds or the proxy container will be unable to start
+`kubectl create secret generic pool-creds --from-file=creds`
+
+then browse to http://{{ .Values.controller.publicHostname }}:{{ .Values.controller.service.nodePort }}/

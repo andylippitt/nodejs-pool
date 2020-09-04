@@ -1,0 +1,6 @@
+[submodule "nodejs-poolController"]
+	path = nodejs-poolController
+	url = https://github.com/andylippitt/nodejs-poolController
+[submodule "nodejs-poolController-webClient"]
+	path = nodejs-poolController-webClient
+	url = https://github.com/andylippitt/nodejs-poolController-webClient

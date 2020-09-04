@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  proxy:
+    image: andylippitt/pool_proxy:0.20-arm
+    build:
+      context: nodejs-poolController-proxy
+    environment:
+      - REMOTE=pi@raspberry
+      - DEVICE=FILE:/dev/ttyS0,b9600,raw
+    ports:
+      - "30485:30485"
+    volumes:
+      - ./creds:/app/creds:ro
+  controller:
+    image: andylippitt/pool_controller:0.20-arm
+    build:
+      context: nodejs-poolController
+    ports:
+      - "4200:4200"
+    volumes:
+      # this is the default json with this patch:
+      #  "netConnect": true,
+      #  "netHost": "nodejs-pool_proxy_1",
+      #  "netPort": 30485,
+      - ./compose-config/server-config.json:/app/config.json:ro
+  web:
+    image: andylippitt/pool_web:0.20-arm
+    build:
+      context: nodejs-poolController-webClient
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./compose-config/client-config.json:/app/config.json:ro
+  
+  unified:
+    entrypoint: ["echo", "build only"]
+    image: andylippitt/pool_controller_unified:0.20-arm
+    build:
+      context: .
+    

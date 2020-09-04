@@ -1,0 +1,263 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pool-controller-config
+data:
+  config.json: |
+    {
+      "controller": {
+        "comms": {
+          "rs485Port": "/dev/ttyUSB0",
+          "mockPort": false,
+          "netConnect": true,
+          "netHost": "pool-proxy",
+          "netPort": 30485,
+          "inactivityRetry": 10,
+          "portSettings": {
+            "baudRate": 9600,
+            "dataBits": 8,
+            "parity": "none",
+            "stopBits": 1,
+            "flowControl": false,
+            "autoOpen": false,
+            "lock": false
+          }
+        }
+      },
+      "web": {
+        "servers": {
+          "http2": {
+            "enabled": false
+          },
+          "http": {
+            "enabled": true,
+            "ip": "0.0.0.0",
+            "port": 4200,
+            "httpsRedirect": false,
+            "authentication": "none",
+            "authFile": "/users.htpasswd"
+          },
+          "https": {
+            "enabled": true,
+            "ip": "0.0.0.0",
+            "port": 4201,
+            "authentication": "none",
+            "authFile": "/users.htpasswd",
+            "sslKeyFile": "",
+            "sslCertFile": ""
+          },
+          "mdns": {
+            "enabled": false
+          },
+          "ssdp": {
+            "enabled": false
+          }
+        },
+        "services": {},
+        "interfaces": {
+          "smartThings": {
+            "name": "SmartThings/Hubitat",
+            "enabled": false,
+            "fileName": "smartThings-Hubitat.json",
+            "globals": {},
+            "options": {
+              "host": "0.0.0.0",
+              "port": 39500
+            }
+          },
+          "vera": {
+            "name": "Vera",
+            "enabled": false,
+            "fileName": "vera.json",
+            "vars": {
+              "deviceId": 0
+            },
+            "options": {
+              "host": "",
+              "port": 3480
+            }
+          }
+        }
+      },
+      "log": {
+        "packet": {
+          "enabled": false,
+          "logToConsole": false,
+          "logToFile": false,
+          "filename": "packetLog",
+          "invalid": true,
+          "broadcast": {
+            "enabled": true,
+            "includeActions": [],
+            "includeSource": [],
+            "includeDest": [],
+            "excludeActions": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "pump": {
+            "enabled": true,
+            "includeActions": [],
+            "includeSource": [],
+            "includeDest": [],
+            "excludeActions": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "chlorinator": {
+            "enabled": true,
+            "includeSource": [],
+            "includeDest": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "intellichem": {
+            "enabled": true,
+            "includeActions": [],
+            "exclueActions": [],
+            "includeSource": [],
+            "includeDest": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "intellivalve": {
+            "enabled": true,
+            "includeActions": [],
+            "exclueActions": [],
+            "includeSource": [],
+            "includeDest": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "unidentified": {
+            "enabled": true,
+            "includeSource": [],
+            "includeDest": [],
+            "excludeSource": [],
+            "excludeDest": []
+          },
+          "unknown": {
+            "enabled": true,
+            "includeSource": [],
+            "includeDest": [],
+            "excludeSource": [],
+            "excludeDest": []
+          }
+        },
+        "app": {
+          "enabled": true,
+          "level": "info",
+          "captureForReplay": false
+        }
+      },
+      "appVersion": "6.0.0"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pool-controller-webclient-config
+data:
+  discover: |
+    {
+      "override": {
+        "protocol": "http",
+        "host": "pickle-0",
+        "port": 31080
+      },
+      "useSSDP": false,
+      "poolURL": "http://pickle-0:31080"
+    }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: pool-controller
+  name: pool-controller
+spec:
+  containers:
+  - image: andylippitt/pool_controller:0.16-arm
+    name: controller
+    ports:
+    - containerPort: 4200
+      protocol: TCP
+    volumeMounts:
+    - mountPath: /app/config.json
+      name: config
+      subPath: config.json
+    - mountPath: /app/dist/static/discover
+      name: config-webclient
+      subPath: discover
+  restartPolicy: Always
+  volumes:
+  - configMap:
+      defaultMode: 420
+      items:
+      - key: config.json
+        path: config.json
+      name: pool-controller-config
+    name: config
+  - configMap:
+      defaultMode: 420
+      items:
+      - key: discover
+        path: discover
+      name: pool-controller-webclient-config
+    name: config-webclient
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: pool-proxy
+  name: pool-proxy
+spec:
+  containers:
+  - image: andylippitt/pool_proxy:0.12-arm
+    name: proxy
+    ports:
+    - containerPort: 30485
+      protocol: TCP
+    volumeMounts:
+    - mountPath: /app/creds
+      name: creds
+      subPath: creds
+  restartPolicy: Always
+  volumes:
+  - name: creds
+    secret:
+      secretName: pool-creds
+      # kubectl create secret generic pool-creds --from-file=creds
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pool
+  name: pool-controller
+spec:
+  selector:
+    app: pool-controller
+  ports:
+  - name: http
+    port: 4200
+    nodePort: 31080
+    protocol: TCP
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pool
+  name: pool-proxy
+spec:
+  selector:
+    app: pool-proxy
+  ports:
+  - name: http
+    port: 30485
+    protocol: TCP
+  type: ClusterIP
+  

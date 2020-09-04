@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-pool-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pool-controller
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-pool-controller
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-pool-controller
+      namespace: {{ .Release.Namespace }}
+      labels:
+        app: {{ .Release.Name }}-pool-controller
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      {{- if .Values.controller.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.controller.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      terminationGracePeriodSeconds: 0
+      containers:
+      - image: {{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}
+        imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+        name: controller
+        ports:
+        - containerPort: 4200
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /app/config.json
+          name: config
+          subPath: config.json
+        - mountPath: /app/dist/static/discover
+          name: config-webclient
+          subPath: discover
+      restartPolicy: Always
+      volumes:
+      - configMap:
+          defaultMode: 400
+          items:
+          - key: config.json
+            path: config.json
+          name: pool-controller-config
+        name: config
+      - configMap:
+          defaultMode: 400
+          items:
+          - key: discover
+            path: discover
+          name: pool-controller-webclient-config
+        name: config-webclient
+      {{- if .Values.controller.nodeSelector }}
+      nodeSelector:
+    {{ toYaml .Values.controller.nodeSelector | indent 6 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-pool-controller
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pool-controller
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    app: {{ .Release.Name }}-pool-controller
+  ports:
+{{- if eq .Values.controller.service.type "NodePort" }}
+  - name: http
+    port: 4200
+    nodePort: {{ .Values.controller.service.nodePort }}
+    protocol: TCP
+  type: NodePort
+{{- else }}
+  - name: http
+    port: 4200
+    protocol: TCP
+    type: {{ .Values.controller.service.type }}
+{{- end }}

@@ -1,0 +1,5 @@
+apiVersion: v2
+appVersion: "1.0.0"
+description: "nodejs-poolController"
+name: nodejs-pool
+version: 1.0.0

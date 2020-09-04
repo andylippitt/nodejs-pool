@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-pool-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pool-proxy
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-pool-proxy
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-pool-proxy
+      namespace: {{ .Release.Namespace }}
+      labels:
+        app: {{ .Release.Name }}-pool-proxy
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      {{- if .Values.proxy.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.proxy.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      terminationGracePeriodSeconds: 0
+      containers:
+      - image: {{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}
+        imagePullPolicy: {{ .Values.proxy.image.pullPolicy }}
+        name: proxy
+        env:
+        - name: REMOTE
+          value: "{{ .Values.proxy.config.ssh }}"
+        - name: DEVICE
+          value: "{{ .Values.proxy.config.device }}"
+        ports:
+        - containerPort: 30485
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /app/creds
+          name: creds
+          subPath: creds
+      restartPolicy: Always
+      volumes:
+      - name: creds
+        secret:
+          secretName: pool-creds
+          # kubectl create secret generic pool-creds --from-file=creds
+      {{- if .Values.controller.nodeSelector }}
+      nodeSelector:
+    {{ toYaml .Values.controller.nodeSelector | indent 6 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-pool-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-pool-proxy
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    app: {{ .Release.Name }}-pool-proxy
+  ports:
+  - name: http
+    port: 30485
+    protocol: TCP
+  type: ClusterIP
+  
