@@ -1,11 +1,12 @@
-# nodejs-poolController - docker
+# nodejs-poolController - docker and kubernetes support
+This is a docker, docker-compose, and kubernetes/helm configuration for https://github.com/tagyoureit/nodejs-poolController 
 
-This is setup to run via an ssh proxy to
-a raspberry pi connected to the pool via RS485 serial bus
+# ssh tunnel to server with rs485
+the nodejs-pool-proxy project is an socat->ssh->socat->device tunnel used to connect to whichever device has the
+rs485 adapter installed (in my case a pi zero w attached to the pool controller).
 
+You'll need to create an RSA key without passphrase for this tunnel to work.
 
-# requirements
-You'll need to create an RSA key without passphrase
 to use this setup
 
 ```
@@ -39,7 +40,6 @@ user@linux:~$ ssh -i creds pi@raspberrypi
 ```
 
 # run with docker-compose
-
 create a file `creds` as above
 
 see the configurations in ./compose-config
@@ -48,8 +48,7 @@ see the configurations in ./compose-config
 then browse to http://localhost:8080
 
 # run in kuberenetes
-
-create the rsa creds as above
+create a file `creds` as above
 
 then import them into a secret
 `kubectl create secret generic pool-creds --from-file=creds`
@@ -57,3 +56,7 @@ then import them into a secret
 `helm upgrade --install test helm/ --set controller.publicHostname=mynode-0 --set proxy.config.ssh=pi@raspberry --set proxy.config.device="FILE:/dev/ttyS0,b9600,raw"`
 
 then browse to http://mynode-0:31080
+
+The kubernetes system unfies the controller and webclient into a single pod by adding static hosting to the express server. This requires an additional hack
+to mock the response from the /discover endpoint called by the client. The helm chart pushes a static json response into the static content folder which suffices,
+however, it means we need an absolute hostname to connect to from the outside and we can't support ssl as-is. would need some react-client changes to allow full static, relative hosting.
