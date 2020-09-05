@@ -7,8 +7,6 @@ controller:
   imagePullSecrets: {}
   pullPolicy: IfNotPresent
 
-  publicHostname: override.controller.publicHostname
-
   service:
     type: NodePort
     nodePort: 31080

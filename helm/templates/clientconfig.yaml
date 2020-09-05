@@ -8,10 +8,10 @@ data:
     {
       "override": {
         "protocol": "http",
-        "host": "{{ .Values.controller.publicHostname }}",
-        "port": {{ .Values.controller.service.nodePort }}
+        "host": "",
+        "port": 0
       },
       "useSSDP": false,
-      "poolURL": "http://{{ .Values.controller.publicHostname }}:{{ .Values.controller.service.nodePort }}"
+      "poolURL": ""
     }
 ---

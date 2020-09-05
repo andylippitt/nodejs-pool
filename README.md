@@ -53,10 +53,6 @@ create a file `creds` as above
 then import them into a secret
 `kubectl create secret generic pool-creds --from-file=creds`
 
-`helm upgrade --install test helm/ --set controller.publicHostname=mynode-0 --set proxy.config.ssh=pi@raspberry --set proxy.config.device="FILE:/dev/ttyS0,b9600,raw"`
+`helm upgrade --install test helm/ --set proxy.config.ssh=pi@raspberry --set proxy.config.device="FILE:/dev/ttyS0,b9600,raw"`
 
 then browse to http://mynode-0:31080
-
-The kubernetes system unfies the controller and webclient into a single pod by adding static hosting to the express server. This requires an additional hack
-to mock the response from the /discover endpoint called by the client. The helm chart pushes a static json response into the static content folder which suffices,
-however, it means we need an absolute hostname to connect to from the outside and we can't support ssl as-is. would need some react-client changes to allow full static, relative hosting.
