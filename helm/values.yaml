@@ -1,7 +1,7 @@
 controller:
   image:
     repository: andylippitt/pool_unified
-    tag: 0.21
+    tag: 0.26
 
   nodeSelector: {}
   imagePullSecrets: {}

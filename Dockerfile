@@ -15,5 +15,5 @@ RUN npm run build-prod
 
 FROM node:current-slim as releasecontainer
 COPY --from=controllerbuild /app/dist/compiled /app
-
+WORKDIR /app
 ENTRYPOINT ["node", "/app/index.js"]
