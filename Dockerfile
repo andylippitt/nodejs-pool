@@ -13,5 +13,7 @@ COPY ./nodejs-poolController/. .
 COPY --from=webbuild /app/dist/web/ /app/dist/static/
 RUN npm run build-prod
 
-FROM node:current as releasecontainer
+FROM node:current-slim as releasecontainer
 COPY --from=controllerbuild /app/dist/compiled /app
+
+ENTRYPOINT ["node", "/app/index.js"]
