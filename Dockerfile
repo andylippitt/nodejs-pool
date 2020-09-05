@@ -1,2 +1,17 @@
-FROM andylippitt/pool_controller:0.21
-COPY --from=andylippitt/pool_web:0.21 /app/dist/web/ /app/dist/static/
+FROM node:current as webbuild
+WORKDIR /app
+COPY nodejs-poolController-webClient/package*.json ./
+RUN npm install
+COPY ./nodejs-poolController-webClient/. .
+RUN npm run build:parcel
+
+FROM node:current as controllerbuild
+WORKDIR /app
+COPY ./nodejs-poolController/package*.json ./
+RUN npm install
+COPY ./nodejs-poolController/. .
+COPY --from=webbuild /app/dist/web/ /app/dist/static/
+RUN npm run build-prod
+
+FROM node:current as releasecontainer
+COPY --from=controllerbuild /app/dist/compiled /app
