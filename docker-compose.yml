@@ -2,7 +2,7 @@ version: '3'
 
 services:
   proxy:
-    image: andylippitt/pool_proxy:0.21
+    image: andylippitt/pool_proxy:1.0
     build:
       context: nodejs-poolController-proxy
     environment:
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./creds:/app/creds:ro
   controller:
-    image: andylippitt/pool_controller:0.21
+    image: andylippitt/pool_controller:1.0
     build:
       context: nodejs-poolController
     ports:
@@ -25,7 +25,7 @@ services:
       #  "netPort": 30485,
       - ./compose-config/server-config.json:/app/config.json:ro
   web:
-    image: andylippitt/pool_web:0.21
+    image: andylippitt/pool_web:1.0
     build:
       context: nodejs-poolController-webClient
     ports:
@@ -35,7 +35,7 @@ services:
   
   unified:
     entrypoint: ["echo", "build only"]
-    image: andylippitt/pool_unified:0.21
+    image: andylippitt/pool_unified:1.0
     build:
       context: .
     

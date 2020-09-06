@@ -1,7 +1,7 @@
 controller:
   image:
     repository: andylippitt/pool_unified
-    tag: 0.26
+    tag: "1.0"
 
   nodeSelector: {}
   imagePullSecrets: {}
@@ -14,7 +14,7 @@ controller:
 proxy:
   image:
     repository: andylippitt/pool_proxy
-    tag: 0.21
+    tag: "1.0"
   
   config:
     ssh: pi@raspberry
